@@ -294,16 +294,23 @@ function App() {
 }
 
 function Admin() {
-  const [rows, setRows] = useState<Note[]>([]);
+  type Row = Pick<Note, 'id'|'slug'|'title'|'updated_at'|'expires_at'|'views'> & {last_viewed_at:number};
+  type Stats = {total:number; expired:number; inactive:number; views:number; inactiveDays:number};
+  const [rows, setRows] = useState<Row[]>([]);
+  const [stats, setStats] = useState<Stats|null>(null);
+  const [filter, setFilter] = useState<'all'|'inactive'|'expired'>('all');
   const [page, setPage] = useState(1);
   const [more, setMore] = useState(false);
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(true);
-  async function load(selected:number) {
+  async function load(selected:number, selectedFilter = filter) {
     setBusy(true);
     try {
-      const result = await api('admin/notes?page=' + selected);
-      setRows(result.notes); setMore(result.more); setPage(selected);
+      const [result, totals] = await Promise.all([
+        api('admin/notes?page=' + selected + '&filter=' + selectedFilter),
+        api('admin/stats')
+      ]);
+      setRows(result.notes); setMore(result.more); setPage(selected); setFilter(selectedFilter); setStats(totals);
     } catch (error) {setStatus((error as Error).message);}
     finally {setBusy(false);}
   }
@@ -316,10 +323,27 @@ function Admin() {
       await load(page);
     } catch (error) {setStatus((error as Error).message); setBusy(false);}
   }
-  return <main><section className="surface standalone admin"><a href="/">← Notepad</a><h1>Quản lý ghi chú</h1><p role="status">{status}</p>
-    <div className="table"><table><thead><tr><th>Ghi chú</th><th>Cập nhật</th><th>Ngày hết hạn</th><th>Thao tác</th></tr></thead><tbody>
-      {rows.map(row => <tr key={row.id}><td><a href={'/' + row.slug}>{row.title || row.slug}</a></td><td>{when(row.updated_at)}</td>
-        <td>{when(row.expires_at)}</td><td><form className="tools" onSubmit={e => {
+  async function cleanup() {
+    if (!confirm('Xóa vĩnh viễn tối đa 1.000 ghi chú hết hạn hoặc không hoạt động?')) return;
+    setBusy(true);
+    try {
+      const result = await api('admin/cleanup', 'POST');
+      setStatus(`Đã dọn ${result.deleted} ghi chú.`);
+      await load(1);
+    } catch (error) {setStatus((error as Error).message); setBusy(false);}
+  }
+  return <main><section className="surface standalone admin"><a href="/">← Notepad</a><h1>Quản lý ghi chú</h1><p>Ghi chú không có lượt xem hay cập nhật trong 21 ngày được dọn tự động mỗi 30 phút. Ghi chú hết hạn cũng được dọn.</p><p role="status">{status}</p>
+    {stats && <div className="admin-cards">
+      <div><strong>{stats.total}</strong><span>Tổng ghi chú</span></div>
+      <div><strong>{stats.total - stats.expired - stats.inactive}</strong><span>Đang hoạt động</span></div>
+      <div><strong>{stats.inactive}</strong><span>Không hoạt động {stats.inactiveDays} ngày</span></div>
+      <div><strong>{stats.expired}</strong><span>Đã hết hạn</span></div>
+      <div><strong>{stats.views}</strong><span>Tổng lượt xem</span></div>
+    </div>}
+    <div className="tools admin-controls"><label htmlFor="admin-filter">Hiển thị</label><select id="admin-filter" value={filter} disabled={busy} onChange={e => void load(1, e.target.value as typeof filter)}><option value="all">Tất cả</option><option value="inactive">Không hoạt động</option><option value="expired">Hết hạn</option></select><button disabled={busy} onClick={() => void load(page)}>Làm mới</button><button className="error" disabled={busy || !stats || stats.inactive + stats.expired === 0} onClick={() => void cleanup()}>Dọn ngay</button></div>
+    <div className="table"><table><thead><tr><th>Ghi chú</th><th>Lượt xem</th><th>Cập nhật</th><th>Xem gần nhất</th><th>Ngày hết hạn</th><th>Thao tác</th></tr></thead><tbody>
+      {rows.map(row => <tr key={row.id}><td><a href={'/' + row.slug}>{row.title || row.slug}</a></td>
+        <td>{row.views}</td><td>{when(row.updated_at)}</td><td>{row.last_viewed_at ? when(row.last_viewed_at) : 'Chưa có'}</td><td>{when(row.expires_at)}</td><td><form className="tools" onSubmit={e => {
           e.preventDefault(); void change(row.id,'PATCH',String(new FormData(e.currentTarget).get('expiry')));
         }}><input aria-label="Ngày hết hạn mới" name="expiry" type="datetime-local" required/><button disabled={busy}>Đổi hạn</button>
           <button type="button" className="error" disabled={busy} onClick={() => {if(confirm('Xóa vĩnh viễn ghi chú này?')) void change(row.id,'DELETE');}}>Xóa</button></form></td></tr>)}

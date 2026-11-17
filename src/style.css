@@ -45,4 +45,10 @@ footer{border-bottom:0;border-top:1px solid var(--line);font-size:.84rem;color:v
 .standalone form:not(.tools){display:grid;gap:10px;justify-items:start}
 .standalone h1{font-size:1.4rem}
 .table{overflow-x:auto;margin-bottom:16px}
+.admin-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
+.admin-cards>div{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg);display:grid;gap:5px}
+.admin-cards strong{font-size:1.5rem}
+.admin-cards span{font-size:.82rem;color:var(--muted)}
+.admin-controls{margin-bottom:16px}
+select{font:inherit;color:inherit;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px 10px}
 @media(max-width:600px){main{padding:0 10px;margin:20px auto}.bar{padding:10px}.note-head,.toolbar,footer{padding:10px}.editor,.preview,.raw,.code{padding:14px}.tabs button{padding:5px 7px}.brand{font-size:.9rem}}

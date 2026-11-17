@@ -1,6 +1,7 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 const DAY = 86_400_000;
+const INACTIVE_DAYS = 21;
 const encoder = new TextEncoder();
 const random = () => crypto.randomUUID().replaceAll('-', '');
 const hex = (value: ArrayBuffer) => Array.from(new Uint8Array(value), x => x.toString(16).padStart(2, '0')).join('');
@@ -12,7 +13,7 @@ class ApiError extends Error {
 type Env = { DB: any; ACCESS_TEAM_DOMAIN?: string; ACCESS_AUD?: string };
 type Note = {
   id: string; slug: string; title: string; content: string; edit_hash: string;
-  password_hash: string | null; version: number; views: number; updated_at: number; expires_at: number;
+  password_hash: string | null; version: number; views: number; updated_at: number; last_viewed_at: number; expires_at: number;
 };
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers });
@@ -97,16 +98,41 @@ export async function onRequest({request, env}: {request: Request; env: Env}) {
 
     if (group === 'admin') {
       await admin(request, env);
+      const inactiveBefore = now - INACTIVE_DAYS * DAY;
+      if (slug === 'stats' && !action && method === 'GET') {
+        const stats = await db.prepare(`SELECT COUNT(*) AS total,
+          COALESCE(SUM(CASE WHEN expires_at <= ? THEN 1 ELSE 0 END), 0) AS expired,
+          COALESCE(SUM(CASE WHEN expires_at > ? AND updated_at <= ? AND last_viewed_at <= ? THEN 1 ELSE 0 END), 0) AS inactive,
+          COALESCE(SUM(views), 0) AS views FROM notes`)
+          .bind(now, now, inactiveBefore, inactiveBefore).first();
+        return json({...stats, inactiveDays: INACTIVE_DAYS});
+      }
+      if (slug === 'cleanup' && !action && method === 'POST') {
+        const result = await db.prepare(`DELETE FROM notes WHERE id IN (
+          SELECT id FROM notes WHERE expires_at <= ? OR (updated_at <= ? AND last_viewed_at <= ?)
+          ORDER BY CASE WHEN expires_at <= ? THEN expires_at ELSE MAX(updated_at, last_viewed_at) END LIMIT 1000
+        )`).bind(now, inactiveBefore, inactiveBefore, now).run();
+        return json({deleted: result.meta.changes});
+      }
       if (slug !== 'notes') return fail(404, 'Không tìm thấy.');
       if (!action && method === 'GET') {
         const page = Math.max(1, Math.min(10000, Number.parseInt(url.searchParams.get('page') || '1', 10) || 1));
-        const {results} = await db.prepare('SELECT id, slug, title, updated_at, expires_at, views FROM notes ORDER BY updated_at DESC, id LIMIT 21 OFFSET ?').bind((page - 1) * 20).all();
+        const filter = url.searchParams.get('filter') || 'all';
+        if (!['all', 'inactive', 'expired'].includes(filter)) return fail(400, 'Bộ lọc không hợp lệ.');
+        const where = filter === 'inactive' ? 'WHERE expires_at > ? AND updated_at <= ? AND last_viewed_at <= ?'
+          : filter === 'expired' ? 'WHERE expires_at <= ?' : '';
+        const values = filter === 'inactive' ? [now, inactiveBefore, inactiveBefore]
+          : filter === 'expired' ? [now] : [];
+        const {results} = await db.prepare(`SELECT id, slug, title, updated_at, last_viewed_at, expires_at, views
+          FROM notes ${where} ORDER BY updated_at DESC, id LIMIT 21 OFFSET ?`)
+          .bind(...values, (page - 1) * 20).all();
         return json({ notes: results.slice(0, 20), more: results.length > 20 });
       }
       if (action && method === 'PATCH') {
         const {expires_at} = await readBody(request);
         if (!Number.isSafeInteger(expires_at) || expires_at <= 0 || expires_at > 8.64e15) return fail(400, 'Ngày hết hạn không hợp lệ.');
-        const result = await db.prepare('UPDATE notes SET expires_at = ?, version = version + 1 WHERE id = ?').bind(expires_at, action).run();
+        const result = await db.prepare('UPDATE notes SET expires_at = ?, last_viewed_at = ?, version = version + 1 WHERE id = ?')
+          .bind(expires_at, now, action).run();
         if (!result.meta.changes) return fail(404, 'Không tìm thấy ghi chú.');
         return json({ok:true});
       }
@@ -154,9 +180,10 @@ export async function onRequest({request, env}: {request: Request; env: Env}) {
         }
       }
       if (action === 'raw') return new Response(note.content, {headers: {...headers, 'Content-Type': 'text/plain; charset=utf-8'}});
-      if (!editable && url.searchParams.get('view') === '1') {
-        await db.prepare('UPDATE notes SET views = views + 1 WHERE id = ? AND expires_at > ?').bind(note.id, now).run();
-        note.views++;
+      if (url.searchParams.get('view') === '1') {
+        await db.prepare('UPDATE notes SET views = views + ?, last_viewed_at = ? WHERE id = ? AND expires_at > ?')
+          .bind(editable ? 0 : 1, now, note.id, now).run();
+        if (!editable) note.views++;
       }
       return json({...summary(note), editable});
     }
