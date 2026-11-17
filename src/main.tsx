@@ -290,7 +290,8 @@ function App() {
         <span role="status" className={statusError ? 'error' : 'status'}>{status || (note?.editable ? 'Có quyền chỉnh sửa' : note ? 'Chỉ xem' : '')}</span>
       </footer>
     </section>}
-    </main></>;
+    </main>
+    <div className="site-footer"><p>Cloudmini đầu tư và duy trì Notepad miễn phí này cho cộng đồng. Khám phá thêm dịch vụ <a href="https://cloudmini.net/price/" target="_blank" rel="noopener noreferrer">VPS</a> và <a href="https://cloudmini.net/proxy/" target="_blank" rel="noopener noreferrer">Proxy</a> của chúng tôi.</p></div></>;
 }
 
 function Admin() {
