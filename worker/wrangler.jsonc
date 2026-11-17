@@ -1,0 +1,8 @@
+{
+  "name":"cloudmini-notepad-cleanup",
+  "main":"cleanup.ts",
+  "compatibility_date":"2026-08-01",
+  "workers_dev":false,
+  "triggers":{"crons":["*/30 * * * *"]},
+  "d1_databases":[{"binding":"DB","database_name":"cloudmini-notepad","database_id":"00000000-0000-0000-0000-000000000000","migrations_dir":"../migrations"}]
+}

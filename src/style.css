@@ -1,0 +1,48 @@
+:root{font-family:Inter,system-ui,sans-serif;color-scheme:light;--bg:#f5f7fb;--paper:#fff;--ink:#182235;--muted:#52627a;--line:#dbe2ed;--accent:#2a49b8;--tint:#eff2ff;--error:#a52c35;--shadow:0 16px 38px #1822350b}
+:root[data-theme=dark]{color-scheme:dark;--bg:#111725;--paper:#1b2434;--ink:#edf2fb;--muted:#afbdd2;--line:#354259;--accent:#aabcff;--tint:#252f4e;--error:#ff9a9e;--shadow:none}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink)}
+a{color:var(--accent)}
+.top{background:var(--paper);border-bottom:1px solid var(--line)}
+.bar{max-width:1200px;margin:auto;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.brand-icon{background:#304eb6;color:white;border-radius:8px;width:32px;height:32px;display:grid;place-items:center;font-size:21px;margin-right:3px}
+main{max-width:1150px;margin:46px auto;padding:0 24px}
+.surface{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.note-head,.toolbar,footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line)}
+.note-head{padding-block:18px}
+.toolbar{background:var(--bg)}
+input,button,.button,textarea{font:inherit;color:inherit}
+button,.button{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:7px 12px;cursor:pointer;text-decoration:none;line-height:1.4;font-size:.89rem}
+button:hover,.button:hover{background:var(--tint)}
+button:disabled{opacity:.55;cursor:default}
+button.primary{background:#304eb6;border-color:#304eb6;color:white;font-weight:600}
+button.primary:hover{background:#263e95}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input:not([type=checkbox]){border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px 10px;min-width:0}
+input.title{border-color:transparent;flex:1 1 200px;font-size:1.35rem;font-weight:650;padding-inline:5px}
+.tools,.tabs,.stats{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tabs button{background:transparent;border-color:transparent;color:var(--muted)}
+.tabs button[aria-pressed=true]{color:var(--accent);background:var(--tint);font-weight:650}
+.editor,.preview,.raw,.code{min-height:clamp(310px,56vh,740px);width:100%;margin:0;display:block;padding:22px 24px;line-height:1.7;overflow-wrap:anywhere}
+.editor,.raw,.code,.preview pre{font-family:'IBM Plex Mono',Consolas,monospace;font-size:.94rem;white-space:pre-wrap}
+.editor{resize:vertical;border:0;background:transparent;outline-offset:-3px}
+.preview pre{padding:14px;background:var(--bg);border-radius:8px}
+.preview table,.table table{border-collapse:collapse;width:100%}
+th,td{padding:8px;text-align:left;border-bottom:1px solid var(--line)}
+.code span{color:var(--muted);display:inline-block;min-width:4.5ch;padding-right:1ch;text-align:right;user-select:none;margin-right:1ch}
+.hljs-keyword,.hljs-selector-tag{color:var(--accent);font-weight:650}
+.hljs-string,.hljs-attr,.hljs-number{color:var(--error)}
+.hljs-comment{color:var(--muted);font-style:italic}
+.panel{padding:14px 18px;border-bottom:1px solid var(--line);display:grid;gap:8px;background:var(--tint)}
+.panel input:not([type=checkbox]),.standalone form input{max-width:600px;width:100%}
+.panel label,.standalone label{font-size:.9rem;font-weight:600}
+.field-row{display:flex;gap:8px}
+footer{border-bottom:0;border-top:1px solid var(--line);font-size:.84rem;color:var(--muted)}
+.stats{gap:14px}
+.error{color:var(--error)}
+.standalone{padding:24px}
+.standalone form:not(.tools){display:grid;gap:10px;justify-items:start}
+.standalone h1{font-size:1.4rem}
+.table{overflow-x:auto;margin-bottom:16px}
+@media(max-width:600px){main{padding:0 10px;margin:20px auto}.bar{padding:10px}.note-head,.toolbar,footer{padding:10px}.editor,.preview,.raw,.code{padding:14px}.tabs button{padding:5px 7px}.brand{font-size:.9rem}}

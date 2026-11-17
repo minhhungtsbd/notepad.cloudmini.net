@@ -1,0 +1,1 @@
+{"name":"cloudmini-notepad","private":true,"type":"module","scripts":{"build":"vite build","dev":"wrangler pages dev dist","test":"node --test"},"dependencies":{"react":"^19.0.0","react-dom":"^19.0.0","react-markdown":"^10.0.0","remark-gfm":"^4.0.0","lowlight":"^3.3.0","jose":"^6.0.0"},"devDependencies":{"vite":"^7.0.0","typescript":"^5.9.0","wrangler":"^4.0.0"}}
