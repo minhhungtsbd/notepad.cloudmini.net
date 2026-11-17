@@ -17,9 +17,9 @@ pnpm dev
 
 1. Tạo hai database D1 bằng `pnpm exec wrangler d1 create cloudmini-notepad` và `pnpm exec wrangler d1 create cloudmini-notepad-preview`. Điền ID tương ứng vào `wrangler.jsonc`. Điền lại ID production trong `worker/wrangler.jsonc`.
 2. Áp dụng migration bằng `pnpm exec wrangler d1 migrations apply DB --remote` và `pnpm exec wrangler d1 migrations apply DB --remote --env preview`.
-3. Tạo dự án Pages `cloudmini-notepad` qua Git integration. Chọn `main`, build `pnpm build`, output `dist`. Hoặc dùng `pnpm exec wrangler pages deploy dist --project-name cloudmini-notepad` với dự án Direct Upload. Pages Functions nằm trong `functions/`.
+3. Pages project `cloudmini-notepad` đã được tạo bằng Direct Upload tại `https://cloudmini-notepad.pages.dev`. Sau mỗi lần thay đổi, chạy `pnpm build` rồi `pnpm exec wrangler pages deploy dist --project-name cloudmini-notepad --branch main`. Pages Functions nằm trong `functions/`. GitHub là kho mã nguồn; push Git chưa tự deploy Pages.
 4. Dùng Cloudflare Access bảo vệ `/admin`, `/admin/*`, `/api/admin/*` bằng cùng ứng dụng Access và giới hạn email quản trị. Trong Pages, đặt `ACCESS_TEAM_DOMAIN` (URL HTTPS của team Access) và `ACCESS_AUD` (Application Audience). API sẽ từ chối quản trị khi JWT thiếu hoặc không hợp lệ, kể cả trên hostname khác.
-5. Deploy worker dọn ghi chú hết hạn bằng `pnpm exec wrangler deploy --config worker/wrangler.jsonc`. Worker dọn tối đa 1.000 ghi chú mỗi nửa giờ. Ghi chú hết hạn đã bị từ chối ở API trước lúc dọn.
+5. Worker dọn ghi chú hết hạn đã deploy. Khi thay đổi Worker, chạy `pnpm exec wrangler deploy --config worker/wrangler.jsonc`. Worker dọn tối đa 1.000 ghi chú mỗi nửa giờ. Ghi chú hết hạn đã bị từ chối ở API trước lúc dọn.
 6. Trước khi mở site công khai, cấu hình giới hạn tần suất cho POST `/api/notes` và POST `/api/notes/*/unlock` bằng WAF/rate limiting theo IP phù hợp gói Cloudflare. Thử trên hostname tạm với D1 preview trước khi chuyển DNS.
 
 ## Dữ liệu VPS hiện tại
