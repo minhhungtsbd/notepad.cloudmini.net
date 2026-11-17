@@ -6,10 +6,5 @@
     "binding": "DB", "database_name": "cloudmini-notepad",
     "database_id": "d5c9969a-f92e-4f84-b9cb-5a0a1ced34c5",
     "migrations_dir": "migrations"
-  }],
-  "env": {"preview":{"d1_databases":[{
-    "binding":"DB","database_name":"cloudmini-notepad-preview",
-    "database_id":"dab73436-dd85-4641-98d8-5ef5c8f75428",
-    "migrations_dir":"migrations"
-  }]}}
+  }]
 }
